@@ -19,20 +19,21 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Set up Node.js version
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v3
         with:
           node-version: '20.x'
 
-      - name: npm install and build
+      - name: npm install, build, and test
         run: |
           npm install
-          npm run build
+          npm run build --if-present
+          npm run test --if-present
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
         with:
-          name: react-build
-          path: dist
+          name: node-app
+          path: .
 
   deploy:
     runs-on: ubuntu-latest
@@ -45,15 +46,14 @@ jobs:
       - name: Download artifact from build job
         uses: actions/download-artifact@v4
         with:
-          name: react-build
-          path: dist
+          name: node-app
       
       - name: Login to Azure
         uses: azure/login@v2
         with:
-          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_DC4156D4176A481D855A1449A839FDFB }}
-          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_2B19D36308A44BF3A66C42107628D689 }}
-          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_2189E11435104873AD44172847702AA9 }}
+          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_463244DE65BD42FE88629A768EA4099E }}
+          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_74C42A2575B84329AB11673DA2D9418F }}
+          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_8E0EFC2734574392B7EC3DABB02EC1E3 }}
 
       - name: 'Deploy to Azure Web App'
         id: deploy-to-webapp
@@ -61,5 +61,5 @@ jobs:
         with:
           app-name: 'CSP-frontend'
           slot-name: 'Production'
-          package: dist
+          package: .
           
