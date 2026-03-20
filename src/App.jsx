@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import reactLogo from './assets/react.svg'
 import viteLogo from './assets/vite.svg'
 import heroImg from './assets/hero.png'
@@ -6,6 +6,34 @@ import './App.css'
 
 function App() {
   const [count, setCount] = useState(0)
+  const [forecast, setForecast] = useState([])
+  const [forecastError, setForecastError] = useState('')
+  const [isLoading, setIsLoading] = useState(false)
+
+  useEffect(() => {
+    const fetchForecast = async () => {
+      setIsLoading(true)
+      setForecastError('')
+
+      try {
+        const baseUrl = import.meta.env.VITE_API_BASE_URL
+        const response = await fetch(`${baseUrl}/weatherforecast`)
+
+        if (!response.ok) {
+          throw new Error(`Request failed: ${response.status}`)
+        }
+
+        const data = await response.json()
+        setForecast(Array.isArray(data) ? data : [])
+      } catch (error) {
+        setForecastError(error?.message ?? 'Failed to load forecast.')
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    fetchForecast()
+  }, [])
 
   return (
     <>
@@ -27,6 +55,23 @@ function App() {
         >
           Count is {count}
         </button>
+        <div className="api-test">
+          <h2>Weather Forecast</h2>
+          {isLoading && <p>Loading forecast...</p>}
+          {forecastError && <p>{forecastError}</p>}
+          {!isLoading && !forecastError && forecast.length === 0 && (
+            <p>No forecast data.</p>
+          )}
+          {!isLoading && !forecastError && forecast.length > 0 && (
+            <ul>
+              {forecast.map((item) => (
+                <li key={`${item.date}-${item.temperatureC}`}>
+                  {item.date}: {item.temperatureC}C ({item.summary})
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
       </section>
 
       <div className="ticks"></div>
